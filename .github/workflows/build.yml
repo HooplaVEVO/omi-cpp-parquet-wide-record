@@ -1,4 +1,4 @@
-name: Check Build
+name: Build with Custom PCAP Config
 
 on: [push, pull_request]
 
@@ -16,9 +16,7 @@ jobs:
         sudo apt-get install -y \
           cmake \
           build-essential \
-          git \
-          flex \
-          bison \
+          libpcap-dev \
           wget \
           lsb-release
 
@@ -28,20 +26,22 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y libarrow-dev libparquet-dev
 
-    - name: Build libpcap from source
+    - name: Create fake PcapConfig.cmake
       run: |
-        git clone https://github.com/the-tcpdump-group/libpcap.git
-        cd libpcap
-        ./configure --prefix=$HOME/libpcap-install
-        make
-        make install
-        # Add to PATH and CMake prefix path
-        echo "$HOME/libpcap-install/lib" >> $GITHUB_PATH
-        echo "CMAKE_PREFIX_PATH=$HOME/libpcap-install:$CMAKE_PREFIX_PATH" >> $GITHUB_ENV
+        # Create a directory for our fake config
+        mkdir -p /tmp/pcap-cmake
+        # Generate a minimal PcapConfig.cmake
+        cat <<EOF > /tmp/pcap-cmake/PcapConfig.cmake
+        set(PCAP_INCLUDE_DIRS "/usr/include/pcap")
+        set(PCAP_LIBRARIES "/usr/lib/x86_64-linux-gnu/libpcap.so")
+        set(PCAP_FOUND TRUE)
+        EOF
 
-    - name: Configure and Build
+    - name: Build
       run: |
         mkdir -p build
         cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$HOME/libpcap-install"
+        cmake .. \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_PREFIX_PATH=/tmp/pcap-cmake  # Point CMake to our fake config
         cmake --build . --config Release
