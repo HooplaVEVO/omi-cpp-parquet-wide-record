@@ -23,7 +23,9 @@ jobs:
       run: |
         git clone https://github.com/the-tcpdump-group/libpcap.git
         cd libpcap
-        ./configure --prefix=$HOME/libpcap-install
+        mkdir build
+        cd build
+        cmake -DCMAKE_INSTALL_PREFIX=$HOME/libpcap-install ..
         make -j$(nproc)
         make install
 
