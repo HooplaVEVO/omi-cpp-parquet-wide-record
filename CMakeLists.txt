@@ -4,7 +4,7 @@ project(omi_parqet)
 
 set(CMAKE_CXX_STANDARD 20)
 
-find_package(PCAP REQUIRED)
+find_package(Pcap REQUIRED)
 find_package(Arrow REQUIRED)
 find_package(Parquet REQUIRED)
 
