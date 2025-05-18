@@ -16,23 +16,32 @@ jobs:
         sudo apt-get install -y \
           cmake \
           build-essential \
-          libpcap-dev \
+          git \
+          flex \
+          bison \
           wget \
           lsb-release
 
-        # Add Apache Arrow repository
+        # Install Arrow/Parquet
         wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
         sudo apt-get install -y ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
         sudo apt-get update
+        sudo apt-get install -y libarrow-dev libparquet-dev
 
-        # Install Arrow and Parquet
-        sudo apt-get install -y \
-          libarrow-dev \
-          libparquet-dev
+    - name: Build libpcap from source
+      run: |
+        git clone https://github.com/the-tcpdump-group/libpcap.git
+        cd libpcap
+        ./configure --prefix=$HOME/libpcap-install
+        make
+        make install
+        # Add to PATH and CMake prefix path
+        echo "$HOME/libpcap-install/lib" >> $GITHUB_PATH
+        echo "CMAKE_PREFIX_PATH=$HOME/libpcap-install:$CMAKE_PREFIX_PATH" >> $GITHUB_ENV
 
     - name: Configure and Build
       run: |
         mkdir -p build
         cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$HOME/libpcap-install"
         cmake --build . --config Release
