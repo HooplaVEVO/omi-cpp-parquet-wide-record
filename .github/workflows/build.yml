@@ -1,10 +1,6 @@
-name: Build
+name: Check Build
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+on: [push, pull_request]
 
 jobs:
   build:
@@ -12,50 +8,31 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
-    - name: Install system dependencies
+    - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y cmake build-essential bison flex
-          
-    - name: Build and install libpcap
-      run: |
-        git clone https://github.com/the-tcpdump-group/libpcap.git
-        cd libpcap
-        mkdir build
-        cd build
-        cmake -DCMAKE_INSTALL_PREFIX=$HOME/libpcap-install ..
-        make -j$(nproc)
-        make install
+        sudo apt-get install -y \
+          cmake \
+          build-essential \
+          libpcap-dev \
+          wget \
+          lsb-release
 
-    - name: Build and install Apache Arrow + Parquet
-      run: |
-        git clone https://github.com/apache/arrow.git
-        cd arrow/cpp
-        mkdir build
-        cd build
-        cmake .. \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DARROW_PARQUET=ON \
-          -DARROW_WITH_UTF8PROC=OFF \
-          -DARROW_WITH_ZLIB=ON \
-          -DARROW_WITH_ZSTD=OFF \
-          -DARROW_BUILD_SHARED=ON \
-          -DARROW_BUILD_STATIC=OFF \
-          -DARROW_CXXFLAGS="-O2" \
-          -GNinja
-        ninja
-        sudo ninja install
-        sudo ldconfig
+        # Add Apache Arrow repository
+        wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
+        sudo apt-get install -y ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
+        sudo apt-get update
 
-    - name: Configure CMake
+        # Install Arrow and Parquet
+        sudo apt-get install -y \
+          libarrow-dev \
+          libparquet-dev
+
+    - name: Configure and Build
       run: |
         mkdir -p build
         cd build
-        cmake ..
-
-    - name: Build Project
-      run: |
-        cd build
-        cmake --build . -- -j$(nproc)
+        cmake .. -DCMAKE_BUILD_TYPE=Release
+        cmake --build . --config Release
