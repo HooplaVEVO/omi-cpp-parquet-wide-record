@@ -1,11 +1,10 @@
-name: Build with Custom PCAP Config
+name: C++ Build
 
 on: [push, pull_request]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -16,9 +15,11 @@ jobs:
         sudo apt-get install -y \
           cmake \
           build-essential \
-          libpcap-dev \
+          libpcap0.8-dev \
           wget \
-          lsb-release
+          lsb-release \
+          apt-transport-https \
+          gnupg
 
         # Install Arrow/Parquet
         wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
@@ -26,22 +27,18 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y libarrow-dev libparquet-dev
 
-    - name: Create fake PcapConfig.cmake
-      run: |
-        # Create a directory for our fake config
-        mkdir -p /tmp/pcap-cmake
-        # Generate a minimal PcapConfig.cmake
-        cat <<EOF > /tmp/pcap-cmake/PcapConfig.cmake
-        set(PCAP_INCLUDE_DIRS "/usr/include/pcap")
-        set(PCAP_LIBRARIES "/usr/lib/x86_64-linux-gnu/libpcap.so")
-        set(PCAP_FOUND TRUE)
-        EOF
+        # Check PCAP files
+        ls /usr/include/pcap.h
+        ls /usr/lib/x86_64-linux-gnu/libpcap*
 
-    - name: Build
+        # Check Arrow/Parquet files
+        ls /usr/include/arrow
+        ls /usr/lib/x86_64-linux-gnu/libarrow*
+        ls /usr/lib/x86_64-linux-gnu/libparquet*
+
+    - name: Configure and Build
       run: |
         mkdir -p build
         cd build
-        cmake .. \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_PREFIX_PATH=/tmp/pcap-cmake  # Point CMake to our fake config
-        cmake --build . --config Release
+        cmake .. -DCMAKE_BUILD_TYPE=Release
+        cmake --build .
