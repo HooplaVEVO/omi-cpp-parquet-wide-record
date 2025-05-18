@@ -17,15 +17,15 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y \
-          cmake \
-          g++ \
-          make \
-          libpcap-dev \
-          wget \
-          unzip \
-          ninja-build \
-          libboost-all-dev
+        sudo apt-get install -y cmake build-essential bison flex
+          
+    - name: Build and install libpcap
+      run: |
+        git clone https://github.com/the-tcpdump-group/libpcap.git
+        cd libpcap
+        ./configure --prefix=$HOME/libpcap-install
+        make -j$(nproc)
+        make install
 
     - name: Build and install Apache Arrow + Parquet
       run: |
