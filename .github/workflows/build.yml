@@ -1,0 +1,59 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          cmake \
+          g++ \
+          make \
+          libpcap-dev \
+          wget \
+          unzip \
+          ninja-build \
+          libboost-all-dev
+
+    - name: Build and install Apache Arrow + Parquet
+      run: |
+        git clone https://github.com/apache/arrow.git
+        cd arrow/cpp
+        mkdir build
+        cd build
+        cmake .. \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DARROW_PARQUET=ON \
+          -DARROW_WITH_UTF8PROC=OFF \
+          -DARROW_WITH_ZLIB=ON \
+          -DARROW_WITH_ZSTD=OFF \
+          -DARROW_BUILD_SHARED=ON \
+          -DARROW_BUILD_STATIC=OFF \
+          -DARROW_CXXFLAGS="-O2" \
+          -GNinja
+        ninja
+        sudo ninja install
+        sudo ldconfig
+
+    - name: Configure CMake
+      run: |
+        mkdir -p build
+        cd build
+        cmake ..
+
+    - name: Build Project
+      run: |
+        cd build
+        cmake --build . -- -j$(nproc)
