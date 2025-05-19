@@ -21,20 +21,45 @@ jobs:
           apt-transport-https \
           gnupg
 
-        # Install Arrow/Parquet
-        wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
-        sudo apt-get install -y ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
-        sudo apt-get update
-        sudo apt-get install -y libarrow-dev libparquet-dev
+    - name: Install Arrow/Parquet from source
+      run: |
+        # Get current release
+        wget https://github.com/apache/arrow/archive/refs/tags/apache-arrow-11.0.0.tar.gz
+        tar -xzf apache-arrow-11.0.0.tar.gz
+        cd arrow-apache-arrow-11.0.0/cpp
+    
+        # Create build directory
+        mkdir build
+        cd build
+    
+        # Configure Arrow build (minimal components needed)
+        cmake .. -DARROW_PARQUET=ON -DARROW_WITH_SNAPPY=ON -DARROW_WITH_ZLIB=ON -DARROW_BUILD_STATIC=OFF
+    
+        # Build and install
+        make -j$(nproc)
+        sudo make install
+    
+        # Return to original directory
+        cd ../..
 
-        # Check PCAP files
-        ls /usr/include/pcap.h
-        ls /usr/lib/x86_64-linux-gnu/libpcap*
+    - name: Install libpcap from source
+      run: |
+        #Get current release
+        wget https://www.tcpdump.org/release/libpcap-1.10.5.tar.xz
+        tar -xf libpcap-4.99.5.tar.xz
+        cd libpcap/
+        
+        #Install libpcap
+        ./configure
+        make
+        sudo make install
+        
+        # Update shared library cache
+        sudo ldconfig
+        
+        #Return to previous directory
+        cd ..
 
-        # Check Arrow/Parquet files
-        ls /usr/include/arrow
-        ls /usr/lib/x86_64-linux-gnu/libarrow*
-        ls /usr/lib/x86_64-linux-gnu/libparquet*
 
     - name: Configure and Build
       run: |
