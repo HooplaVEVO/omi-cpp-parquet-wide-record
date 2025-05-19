@@ -18,6 +18,8 @@ jobs:
           libpcap0.8-dev \
           wget \
           lsb-release \
+          flex \
+          bison \
           apt-transport-https \
           gnupg
 
@@ -40,14 +42,14 @@ jobs:
         sudo make install
     
         # Return to original directory
-        cd ../..
+        cd ../../..
 
     - name: Install libpcap from source
       run: |
         #Get current release
         wget https://www.tcpdump.org/release/libpcap-1.10.5.tar.xz
-        tar -xf libpcap-4.99.5.tar.xz
-        cd libpcap/
+        tar -xf libpcap-1.10.5.tar.xz
+        cd libpcap-1.10.5
         
         #Install libpcap
         ./configure
