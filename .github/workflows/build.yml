@@ -14,39 +14,25 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y \
           cmake \
-          build-essential \
-          libpcap0.8-dev \
+          libpcap-dev \
           wget \
           lsb-release \
-          flex \
-          bison \
+          ca-certificates \
           apt-transport-https \
           gnupg
 
-    - name: Install Arrow/Parquet from source
+    - name: Install latest Arrow/Parquet for C++
       run: |
-        # Get current release
-        wget https://github.com/apache/arrow/archive/refs/tags/apache-arrow-11.0.0.tar.gz
-        tar -xzf apache-arrow-11.0.0.tar.gz
-        cd arrow-apache-arrow-11.0.0/cpp
-    
-        # Create build directory
-        mkdir build
-        cd build
-    
-        # Configure Arrow build (minimal components needed)
-        cmake .. -DARROW_PARQUET=ON -DARROW_WITH_SNAPPY=ON -DARROW_WITH_ZLIB=ON -DARROW_BUILD_STATIC=OFF
-    
-        # Build and install
-        make -j$(nproc)
-        sudo make install
-    
-        # Return to original directory
-        cd ../../..
+        # Ripped straight from Apache Arrow's documentation: https://arrow.apache.org/install/
+        sudo apt install -y -V ca-certificates lsb-release wget
+        wget https://packages.apache.org/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
+        sudo apt install -y -V ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
+        sudo apt update
+        sudo apt install -y -V libparquet-dev # For Apache Parquet C++
 
     - name: Install libpcap from source
       run: |
-        #Get current release
+        #Get current libpcap release
         wget https://www.tcpdump.org/release/libpcap-1.10.5.tar.xz
         tar -xf libpcap-1.10.5.tar.xz
         cd libpcap-1.10.5
@@ -62,10 +48,10 @@ jobs:
         #Return to previous directory
         cd ..
 
-
     - name: Configure and Build
       run: |
         mkdir -p build
         cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release
+        cmake ..
         cmake --build .
+        # If no errors, the build is successful
