@@ -1,6 +1,6 @@
 # Omi C++ Wide Record Parquet 
 
-[![C++ Build](https://github.com/HooplaVEVO/omi-cpp-parquet-wide-record/actions/workflows/build.yml/badge.svg)](https://github.com/HooplaVEVO/omi-cpp-parquet-wide-record/actions/workflows/build.yml)
+[![Build](https://github.com/HooplaVEVO/omi-cpp-parquet-wide-record/actions/workflows/build.yml/badge.svg)](https://github.com/HooplaVEVO/omi-cpp-parquet-wide-record/actions/workflows/build.yml)
 
 Required:
 
