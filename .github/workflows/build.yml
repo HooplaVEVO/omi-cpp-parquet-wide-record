@@ -1,4 +1,4 @@
-name: C++ Build
+name: Build
 
 on: [push, pull_request]
 
@@ -29,24 +29,6 @@ jobs:
         sudo apt install -y -V ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
         sudo apt update
         sudo apt install -y -V libparquet-dev # For Apache Parquet C++
-
-    - name: Install libpcap from source
-      run: |
-        #Get current libpcap release
-        wget https://www.tcpdump.org/release/libpcap-1.10.5.tar.xz
-        tar -xf libpcap-1.10.5.tar.xz
-        cd libpcap-1.10.5
-        
-        #Install libpcap
-        ./configure
-        make
-        sudo make install
-        
-        # Update shared library cache
-        sudo ldconfig
-        
-        #Return to previous directory
-        cd ..
 
     - name: Configure and Build
       run: |
